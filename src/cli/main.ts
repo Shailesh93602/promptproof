@@ -14,7 +14,9 @@ Usage:
   promptproof compare <baseline.json> <current.json> [--json]
 
 run:
-  <suite-module>   a JS/TS module whose default export is { suite, runner }
+  <suite-module>   an ESM module exporting { suite, runner } (default or named).
+                   Node imports it directly, so use .js/.mjs — for a .ts suite
+                   run this CLI under tsx.
   --save <file>    write the run result to <file> (your new baseline)
   --baseline <f>   compare this run against a saved baseline; exit 1 on regressions
   --json           print machine-readable JSON instead of a summary
@@ -23,8 +25,9 @@ compare:
   diff two saved run results; exit 1 if the current run has regressions
 
 Examples:
-  promptproof run ./evals/suite.ts --save baseline.json
-  promptproof run ./evals/suite.ts --baseline baseline.json   # CI gate
+  promptproof run ./evals/suite.mjs --save baseline.json
+  promptproof run ./evals/suite.mjs --baseline baseline.json   # CI gate
+  npx tsx node_modules/promptproof/dist/cli/main.js run ./evals/suite.ts
 `;
 
 interface SuiteModule {
@@ -39,11 +42,26 @@ function getFlag(args: string[], name: string): string | undefined {
 
 async function loadSuiteModule(path: string): Promise<SuiteModule> {
   const abs = resolve(process.cwd(), path);
-  const mod = (await import(pathToFileURL(abs).href)) as {
+  let mod: {
     default?: Partial<SuiteModule>;
     suite?: Suite;
     runner?: ModelRunner;
   };
+  try {
+    mod = (await import(pathToFileURL(abs).href)) as typeof mod;
+  } catch (err) {
+    // Node can't import TypeScript on its own before v22.6. Say so plainly
+    // instead of surfacing a bare "Unknown file extension" from the loader.
+    const code = (err as NodeJS.ErrnoException | undefined)?.code;
+    if (code === "ERR_UNKNOWN_FILE_EXTENSION" && /\.[cm]?tsx?$/.test(path)) {
+      throw new Error(
+        `${path} is TypeScript, and this Node build can't import it directly.\n` +
+          `  Either point at compiled JS (e.g. ./evals/suite.js or a .mjs suite),\n` +
+          `  or run under a TypeScript loader:  npx tsx node_modules/promptproof/dist/cli/main.js run ${path}`,
+      );
+    }
+    throw err;
+  }
   const suite = mod.default?.suite ?? mod.suite;
   const runner = mod.default?.runner ?? mod.runner;
   if (!suite || !runner) {
