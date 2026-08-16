@@ -15,8 +15,11 @@ You change a prompt to fix one thing. Three other things quietly break. You find
 ## Install
 
 ```bash
-npm install promptproof
+npm install github:Shailesh93602/promptproof
 ```
+
+> Not on npm yet — install from the repo. It builds itself on install
+> (`prepare`), and imports as `promptproof`.
 
 ## 60-second example
 
@@ -86,17 +89,26 @@ if (hasRegressions(cmp)) {
 
 ## CLI
 
-A suite module exports `{ suite, runner }`:
+A suite module exports `{ suite, runner }`. The CLI `import`s it with plain
+Node, so point at ESM JavaScript — `./evals/suite.mjs`, or `.js` in a
+`"type": "module"` package:
 
 ```bash
 # save a baseline
-npx promptproof run ./evals/suite.ts --save baseline.json
+npx promptproof run ./evals/suite.mjs --save baseline.json
 
 # later — compare against it; exits 1 if anything regressed (CI gate)
-npx promptproof run ./evals/suite.ts --baseline baseline.json
+npx promptproof run ./evals/suite.mjs --baseline baseline.json
 
 # diff two saved runs
 npx promptproof compare baseline.json current.json
+```
+
+**Writing the suite in TypeScript?** Node can't `import` a `.ts` file on its own
+before v22.6, so run the CLI under a loader (the CLI tells you this if you try):
+
+```bash
+npx tsx node_modules/promptproof/dist/cli/main.js run ./evals/suite.ts --baseline baseline.json
 ```
 
 Sample output:
@@ -125,7 +137,7 @@ jobs:
         with: { node-version: 20 }
       - run: npm ci
       # baseline.json is committed; the gate fails the PR on any regression
-      - run: npx promptproof run ./evals/suite.ts --baseline baseline.json
+      - run: npx promptproof run ./evals/suite.mjs --baseline baseline.json
 ```
 
 ## Graders

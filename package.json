@@ -14,6 +14,12 @@
     "openai"
   ],
   "license": "MIT",
+  "author": "Shailesh Chaudhari <shailesh93602@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shailesh93602/promptproof.git"
+  },
+  "homepage": "https://github.com/Shailesh93602/promptproof#readme",
   "type-note": "ESM-only, Node 18+",
   "bin": {
     "promptproof": "dist/cli/main.js"
@@ -33,13 +39,14 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "demo": "tsx src/cli/main.ts run src/examples/suite.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run typecheck && npm run test && npm run build"
+    "check": "npm run format:check && npm run typecheck && npm run build && npm run test"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
