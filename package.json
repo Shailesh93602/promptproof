@@ -1,5 +1,5 @@
 {
-  "name": "promptproof",
+  "name": "@shailesh93602/promptproof",
   "version": "0.1.0",
   "type": "module",
   "description": "Catch LLM regressions before your users do. A tiny, zero-dependency eval + regression-diff kit: define cases, grade outputs, save a baseline, and find out if your prompt change made things worse. Runs offline in CI.",
